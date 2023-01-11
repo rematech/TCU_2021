@@ -396,11 +396,12 @@ int Drv_Max31865_Temp_Read( int port, float *temp )
 		rtd >>= 1;
 		g_Data.iRTD[port] = rtd;
 		
+#define __MAX31865_TEMP_CAL__MOTHOD_			0
 
-		#if 0
-	    *temp = (rtd/32.0) - 256.0;
+		#if __MAX31865_TEMP_CAL__MOTHOD_
+	    	*temp = (rtd/32.0) - 256.0;
 		#else
-	    *temp = __max31865_readCelsius(port);
+	    	*temp = __max31865_readCelsius(port);
 		#endif
 
     #endif
