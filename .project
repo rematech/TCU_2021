@@ -27,7 +27,7 @@
 	<variableList>
 		<variable>
 			<name>ORIGINAL_PROJECT_ROOT</name>
-			<value>file:/C:/ti/tivaware_c_series_2_1_4_178/examples/boards/dk-tm4c123g/uart_echo/ccs</value>
+			<value>$%7BTI_PRODUCTS_DIR__TIREX%7D/tivaware_c_series_2_1_4_178/examples/boards/dk-tm4c123g/uart_echo/ccs</value>
 		</variable>
 		<variable>
 			<name>SW_ROOT</name>

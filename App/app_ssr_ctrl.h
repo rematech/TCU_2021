@@ -51,11 +51,29 @@ extern const char* str_ctrl_mode[];
 
 extern uint8_t _ctrl_Mode[];
 extern int32_t pv_integer[];
+extern int32_t pv_fraction[];
 extern uint8_t curr_ssr_status[];
 extern int32_t pwm_percent_Integer[];
 extern int max31865_fault[];
 
 extern uint8_t alarm_status[];
+
+extern float _kp[];
+extern float _ki[];
+extern int32_t _kp_integer[];
+extern float _kd[];
+extern int32_t _ki_integer[];
+extern int32_t _kd_integer[];
+extern float _outputUpWeight[];
+extern float _outputDownWeight[];
+extern int32_t _outputUpWeight_integer[];
+extern int32_t _outputDownWeight_integer[];
+extern int32_t _kp_fraction[];
+extern int32_t _ki_fraction[];
+extern int32_t _kd_fraction[];
+extern int32_t _outputUpWeight_fraction[];
+extern int32_t _outputDownWeight_fraction[];
+
 
 /******************************************************************************/
 /* functions                                                                 */

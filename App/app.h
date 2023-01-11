@@ -91,6 +91,39 @@ typedef enum
     HCS_MAX
 }HOST_COMM_STATE;
 
+#define _TEMP_LPF_COUNT			20
+typedef struct
+{   
+	bool bMax31865Print		:1;
+	bool bCheckIFStatePrint	:1;
+	bool bGetTCUData		:1;
+	
+	struct
+	{
+    	uint16_t iRtdRegisterValue[_TEMP_LPF_COUNT];
+		int iTemperature[_TEMP_LPF_COUNT];
+		int iLessThanZeroPart[_TEMP_LPF_COUNT];
+
+		int iIndex;
+	} tempdata[TEMP_CH_MAX];
+
+	uint16_t iReadCount;
+	uint8_t iExcuteCount;
+
+	uint16_t iLPFMax31865Reg[TEMP_CH_MAX];
+	int iLPFTemperature[TEMP_CH_MAX];
+	float fTempFirfilter[TEMP_CH_MAX]; 
+
+	//for analog device cal
+	uint16_t iRTD[TEMP_CH_MAX];
+	float fAnalogDeviceCal[TEMP_CH_MAX];
+
+	uint8_t iMax31865Func_temp[TEMP_CH_MAX];
+	uint8_t iMax31865Func_temp_lesszero[TEMP_CH_MAX];
+
+}__attribute__((packed)) GLOBAL_DATA;
+extern GLOBAL_DATA g_Data;
+
 
 /******************************************************************************/
 /* variables                                                                  */
@@ -107,6 +140,8 @@ void App_System_status_show(void);
 void App_NV_Data_Save(void);
 
 void App_Init(void);
+void App_Init_GData();
+
 
 void App_System(void);
 

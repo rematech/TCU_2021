@@ -87,6 +87,14 @@ int cmd_pid_mode_all(int argc, char** argv);
 int cmd_heater_ctrl(int argc, char** argv);
 
 
+
+int Cmd_Event(int argc, char *argv[]);
+
+void Print_Max31865(int iPort, uint16_t rtd, float fTemperature);
+void PrintCheckIFState(int iChannel, int iState);
+void PrintTCUSendData(uint8_t iCH);
+
+
 //*****************************************************************************
 //
 // Mark the end of the C bindings section for C++ compilers.

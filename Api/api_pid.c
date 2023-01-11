@@ -59,12 +59,12 @@ void PidInit(unsigned int sampleTime, float *outLimitMin, float *outLimitMax, in
  
 /*
  * int PidCompute(...)
- *      PID ���
+ *      PID 계산
  *      
- *      float input     (in)    : input 값 (예, 현재 온도)
- *      float setPoint  (in)    : 목표 값 
- *      float now       (in)    : 현재 시간(ms)
- *      float *pOutput  (out)   : 결과 값 (Factory System input으로 사용,  예, 0 ~ 100% pwm input)
+ *      float input     (in)    : input 媛� (�삁, �쁽�옱 �삩�룄)
+ *      float setPoint  (in)    : 紐⑺몴 媛�
+ *      float now       (in)    : �쁽�옱 �떆媛�(ms)
+ *      float *pOutput  (out)   : 寃곌낵 媛� (Factory System input�쑝濡� �궗�슜,  �삁, 0 ~ 100% pwm input)
  *      return                  : 1(success), 0(fail), -1(interval is not enough)
 
  */
@@ -83,12 +83,12 @@ int PidCompute(float *input, float *setPoint, unsigned long now1ms, float *pOutp
    else
       timeChange = (4294967295 - _pidLastTime1ms[channel]) + now1ms;  // now1ms overflow
 
-   // 맨 처음 실행시 _lastInput이 0 이므로 input값으로 초기화
+   // 留� 泥섏쓬 �떎�뻾�떆 _lastInput�씠 0 �씠誘�濡� input媛믪쑝濡� 珥덇린�솕
    if (_pidLastInput[channel] == 0)
      _pidLastInput[channel] = *input;
    
    
-   // interval이 sampling time 보다 일정 % 작아도 허용
+   // interval�씠 sampling time 蹂대떎 �씪�젙 % �옉�븘�룄 �뿀�슜
    if(timeChange < _pidSampleTime[channel] * 0.95)
    {
 	 //UARTprintf("PidCompute - [%d] input %d, timeChange %d, _pidSampleTime %d, now1ms %d : result -1 \n\r", channel, (int)*input, timeChange, _pidSampleTime[channel], now1ms);
@@ -104,19 +104,19 @@ int PidCompute(float *input, float *setPoint, unsigned long now1ms, float *pOutp
     else if(_pidIntegralTerm[channel] < _pidOutMin[channel]) _pidIntegralTerm[channel] = _pidOutMin[channel];
     dInput = (*input - _pidLastInput[channel]);
 
-    // 온도를 상승 시키는 구간에서는 IntegralTerm을 0으로 해서 Overshooting 최소화
-    // PTerm이 일정 %보다 작아지면 IntegralTerm 가동
+    // �삩�룄瑜� �긽�듅 �떆�궎�뒗 援ш컙�뿉�꽌�뒗 IntegralTerm�쓣 0�쑝濡� �빐�꽌 Overshooting 理쒖냼�솕
+    // PTerm�씠 �씪�젙 %蹂대떎 �옉�븘吏�硫� IntegralTerm 媛��룞
     proportionalTerm = _pidKp[channel] * error;
     if (proportionalTerm > 60)
         _pidIntegralTerm[channel] = 0;
     
     integralTerm = _pidIntegralTerm[channel];
-    derivativeTerm = -_pidKd[channel] * dInput; // - 부호 주의
+    derivativeTerm = -_pidKd[channel] * dInput; // - 遺��샇 二쇱쓽
     
     // test
 //    _orgOutput[channel] = proportionalTerm + integralTerm + derivativeTerm;    
 
-    // output 보정 (Autotuning시 up/down 기울기 값에 의한 보정)
+    // output 蹂댁젙 (Autotuning�떆 up/down 湲곗슱湲� 媛믪뿉 �쓽�븳 蹂댁젙)
     if(proportionalTerm < 0)
       proportionalTerm *= _pidDownWeight[channel];
     else
@@ -165,6 +165,18 @@ void PidSetTunings(float *Kp, float *Ki, float *Kd, float *upWeight, float *down
    _pidKd[channel] = *Kd / sampleTimeInSec;
    _pidUpWeight[channel] = *upWeight;
    _pidDownWeight[channel] = *downWeight;
+
+   // for sending protocols
+   _kp_integer[channel] = (int32_t)_pidKp[channel];
+   _kp_fraction[channel] = get_fraction(_pidKp[channel]);
+   _ki_integer[channel] = (int32_t)_pidKi[channel];
+   _ki_fraction[channel] = get_fraction(_pidKi[channel]);
+   _kd_integer[channel] = (int32_t)_pidKd[channel];
+   _kd_fraction[channel] = get_fraction(_pidKd[channel]);
+   _outputUpWeight_integer[channel] = (int32_t)_pidUpWeight[channel];
+   _outputUpWeight_fraction[channel] = get_fraction(_pidUpWeight[channel]);
+   _outputDownWeight_integer[channel] = (int32_t)_pidDownWeight[channel];
+   _outputDownWeight_fraction[channel] = get_fraction(_pidDownWeight[channel]);
 }
  
 
@@ -203,9 +215,12 @@ float PidGetKd(int channel)
 }
 
 
-void IntCombine(float *value, int intPart, int fractionalPart, int fractionalDigits)
+void IntCombine(float *value, int intPartHigh, int intPartLow, int fractionalPart, int fractionalDigits)
 {
   float fDigits = 0;
+  int intPart = 0;
+
+  intPart = (intPartHigh << 8) | intPartLow ;
   
   if(fractionalDigits <= 3)
     fDigits = (float)(pow(10,fractionalDigits));
@@ -216,3 +231,15 @@ void IntCombine(float *value, int intPart, int fractionalPart, int fractionalDig
  
 }
 
+void IntCombineWgt(float *value, int intPart, int fractionalPart, int fractionalDigits)
+{
+  float fDigits = 0;
+
+  if(fractionalDigits <= 3)
+    fDigits = (float)(pow(10,fractionalDigits));
+  else
+    fDigits = 10; // default
+
+ *value = intPart + (float)((float)fractionalPart/fDigits);
+
+}

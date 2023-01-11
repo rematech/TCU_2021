@@ -49,7 +49,8 @@ console_cmds_t cmd_list[] =
     { "dis",    cmd_data_display,       " Data Display. ex: <0 : off, 1: on>" },
     
     { "echo",   cmd_host_if_echo_set,   " Host IF RCV Data Echo En/Dis ex: echo 1, echo 0" },
-    
+	{ "print",	Cmd_Event,				" Create Event	0: Max31865  1: IF state"},
+
     { NULL, NULL, NULL}
 };
 
@@ -274,6 +275,28 @@ int Cmd_help(int argc, char *argv[])
     return CMDLINE_SUC;
 }
 
+int Cmd_Event(int argc, char *argv[])
+{
+	switch(*argv[1])
+	{
+		case '0':
+			g_Data.bMax31865Print = !g_Data.bMax31865Print;
+			break;
+		case '1':
+			g_Data.bCheckIFStatePrint = !g_Data.bCheckIFStatePrint;
+			break;
+		case '2':
+			g_Data.bGetTCUData = !g_Data.bGetTCUData;
+	}
+
+
+    //dmsg(DL_INF, "%02X %02X %02X %02X", argc, *argv[0], *argv[1], *argv[2]);
+
+	return 1;
+}
+
+
+
 
 void Api_Console_Data_Clr(void)
 {
@@ -372,5 +395,106 @@ void App_Console_Init(uint8_t ch,uint8_t priority,uint32_t baudrate,uint8_t pari
     UARTStdioConfig(ch, baudrate, SysCtlClockGet());
     
     dmsg(DL_NON,"\r\n\r\n");
+}
+
+
+void Print_Max31865(int iPort, uint16_t rtd, float fTemperature)
+{
+	int index;
+	float ftemp;
+	
+
+	if(!g_Data.bMax31865Print)
+		return;
+
+	index = g_Data.tempdata[iPort].iIndex;
+	
+	g_Data.tempdata[iPort].iRtdRegisterValue[index] = rtd;
+	g_Data.iLPFTemperature[iPort] = rtd;
+
+	ftemp = (float)rtd / 32.0;
+	ftemp = ftemp - (int)ftemp;
+	g_Data.tempdata[iPort].iLessThanZeroPart[index] = ftemp * 100;
+
+	
+
+	
+
+#if 1
+	#if 1
+		g_Data.iMax31865Func_temp[iPort] = (int)g_Data.fTempFirfilter[iPort];
+		g_Data.iMax31865Func_temp_lesszero[iPort] = 100*(g_Data.fTempFirfilter[iPort] - (int)g_Data.fTempFirfilter[iPort]);
+	#else
+		g_Data.iMax31865Func_temp[iPort] = (int)g_Data.fAnalogDeviceCal[iPort];
+		g_Data.iMax31865Func_temp_lesszero[iPort] = 100*(g_Data.fAnalogDeviceCal[iPort] - (int)g_Data.fAnalogDeviceCal[iPort]);
+	#endif
+	
+	if(iPort == TEMP_CH_2)
+	{
+		g_Data.iExcuteCount++;
+
+		if(g_Data.iExcuteCount == 1)
+		{
+			//  		  count /ch1 rtd low data / ch1 low-temp / ch1 FIR temp / ch2 rtd low data / ch2 low-temp / ch2 FIR temp / 
+			dmsg(DL_INF,"%05d 	CH1: %d  %d.%02d  %d.%02d | CH2: %d  T : %d.%02d / %d.%02d \r\n", g_Data.iReadCount,
+				g_Data.iLPFTemperature[TEMP_CH_1], (g_Data.iLPFTemperature[TEMP_CH_1]/32)-256, g_Data.tempdata[TEMP_CH_1].iLessThanZeroPart[index], g_Data.iMax31865Func_temp[TEMP_CH_1], g_Data.iMax31865Func_temp_lesszero[TEMP_CH_1], 
+				g_Data.iLPFTemperature[TEMP_CH_2], (g_Data.iLPFTemperature[TEMP_CH_2]/32)-256, g_Data.tempdata[TEMP_CH_2].iLessThanZeroPart[index], g_Data.iMax31865Func_temp[TEMP_CH_2], g_Data.iMax31865Func_temp_lesszero[TEMP_CH_2]);
+
+			g_Data.iReadCount++;
+			g_Data.iExcuteCount = 0;
+		}
+	}
+
+#elif 1
+	g_Data.iMax31865Func_temp[iPort] = (int)g_Data.fTempFirfilter[iPort];
+	g_Data.iMax31865Func_temp_lesszero[iPort] = 100*(g_Data.fTempFirfilter[iPort] - (int)g_Data.fTempFirfilter[iPort]);
+
+	if(iPort == TEMP_CH_2)
+	{
+		
+		dmsg(DL_INF,"CH1 rtd: %d  T : %d.%02d / %d.%02d | CH2 rtd: %d  T : %d.%02d / %d.%02d \r\n", 
+							g_Data.iLPFTemperature[TEMP_CH_1], (g_Data.iLPFTemperature[TEMP_CH_1]/32)-256, g_Data.tempdata[TEMP_CH_1].iLessThanZeroPart[index], g_Data.iMax31865Func_temp[TEMP_CH_1], g_Data.iMax31865Func_temp_lesszero[TEMP_CH_1], 
+							g_Data.iLPFTemperature[TEMP_CH_2], (g_Data.iLPFTemperature[TEMP_CH_2]/32)-256, g_Data.tempdata[TEMP_CH_2].iLessThanZeroPart[index], g_Data.iMax31865Func_temp[TEMP_CH_2], g_Data.iMax31865Func_temp_lesszero[TEMP_CH_2]);
+	}
+#elif 1
+	g_Data.iMax31865Func_temp[iPort] = (int)fTemperature;
+	g_Data.iMax31865Func_temp_lesszero[iPort] = 100*(fTemperature - (int)fTemperature);
+
+	if(iPort == TEMP_CH_2)
+	{
+		
+		dmsg(DL_INF,"CH1 rtd: %d  T : %d.%02d / %d.%02d | CH2 rtd: %d  T : %d.%02d / %d.%02d \r\n", 
+							g_Data.iLPFTemperature[TEMP_CH_1], (g_Data.iLPFTemperature[TEMP_CH_1]/32)-256, g_Data.tempdata[TEMP_CH_1].iLessThanZeroPart[index], g_Data.iMax31865Func_temp[TEMP_CH_1], g_Data.iMax31865Func_temp_lesszero[TEMP_CH_1], 
+							g_Data.iLPFTemperature[TEMP_CH_2], (g_Data.iLPFTemperature[TEMP_CH_2]/32)-256, g_Data.tempdata[TEMP_CH_2].iLessThanZeroPart[index], g_Data.iMax31865Func_temp[TEMP_CH_2], g_Data.iMax31865Func_temp_lesszero[TEMP_CH_2]);
+	}
+#else
+	if(iPort == TEMP_CH_2)
+	{
+		dmsg(DL_INF,"CH1 rtd: %d  T : %d.%02d FF : %02u | CH2 rtd: %d  T : %d.%02d FF : %02u \r\n", 
+							g_Data.iLPFTemperature[TEMP_CH_1], (g_Data.iLPFTemperature[TEMP_CH_1]/32)-256, g_Data.tempdata[TEMP_CH_1].iLessThanZeroPart[index], g_Data.fTempFirfilter[TEMP_CH_1],
+							g_Data.iLPFTemperature[TEMP_CH_2], (g_Data.iLPFTemperature[TEMP_CH_2]/32)-256, g_Data.tempdata[TEMP_CH_2].iLessThanZeroPart[index], g_Data.fTempFirfilter[TEMP_CH_2]);
+	}
+#endif
+
+	g_Data.tempdata[iPort].iIndex++;
+	if(g_Data.tempdata[iPort].iIndex >= _TEMP_LPF_COUNT)
+		g_Data.tempdata[iPort].iIndex = 0;
+}
+
+
+void PrintTCUSendData(uint8_t iCH)
+{
+	if(g_Data.bGetTCUData)
+		dmsg(DL_INF, "CH%d : %d %d %d %d %d  \r\n", iCH, max31865_fault[iCH], _ctrl_Mode[iCH], pv_integer[iCH], curr_ssr_status[iCH], pwm_percent_Integer[iCH], alarm_status[iCH] );
+}
+
+
+void PrintCheckIFState(int iChannel, int iState)
+{
+	if(!g_Data.bCheckIFStatePrint)
+		return;
+
+	if(iChannel == 0)
+		dmsg(DL_INF, "IF : %d \r\n", iState);
 }
 

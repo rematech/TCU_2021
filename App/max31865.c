@@ -25,6 +25,14 @@
 
 #define CLK_DELAY   1
 
+
+static const float _a1 = 2.55865721669;
+static const float _a2 = 0.000967360412;
+static const float _a3 = 0.000000731467;
+static const float _a4 = 0.000000000691; 
+static const float _a5 = 7.31888555389e-13;
+
+
 extern void Hal_Delay_us(uint32_t us);
 
 void Drv_MAX31865_GPIO_Pin_Init(void)
@@ -250,6 +258,31 @@ unsigned char Drv_Max31865_Ready( int port )
 }
 
 
+////////other temperature cal
+float __max31865_readRTD_ohm(int port)
+{
+	float ftemp;
+	
+	//Drv_Max31865_Temp_Read( port, &ftemp);
+
+									//Rref
+    return ((float)(g_Data.iRTD[port] * (float)(400.0))  / 32768.0);
+}
+
+float __max31865_readCelsius(int port)
+{
+	float analogDivice_cal_temp;
+	
+    float x = (float)(100.0) - __max31865_readRTD_ohm(port);
+    // return celsius calculated with the help of the horners method
+    // reduces needed multiplications and additions
+
+	g_Data.fAnalogDeviceCal[port] =  -(x * (_a1 + x * (_a2 + x * (_a3 + x * (_a4 + x * _a5)))));
+    return g_Data.fAnalogDeviceCal[port];
+}
+
+
+
 /*
  * port : 1~
  * return
@@ -301,6 +334,8 @@ int Drv_Max31865_Temp_Read( int port, float *temp )
 	return 1;
 }
 #else
+
+static uint8_t iDelayCount_forDRDY = 0;
 int Drv_Max31865_Temp_Read( int port, float *temp )
 {
 	uint8_t data;
@@ -308,7 +343,33 @@ int Drv_Max31865_Temp_Read( int port, float *temp )
 	
 	uint32_t loop = 0;
 
-	while ( !Drv_Max31865_Ready( port ) ) { Hal_Delay_us(CLK_DELAY); if( loop++ > 100 ) return -1; }
+#if 1
+	#define __DRDY_PASS_COUNT_			10
+	while(1)
+	{
+		while ( !Drv_Max31865_Ready( port ) ) 
+		{ 
+			iDelayCount_forDRDY = 0;
+			Hal_Delay_us(CLK_DELAY);
+			if( loop++ > 100 )
+				return -1; 
+		}
+
+		iDelayCount_forDRDY++;
+
+		if(iDelayCount_forDRDY >= __DRDY_PASS_COUNT_)
+			break;
+	}
+
+	iDelayCount_forDRDY = 0;
+#else
+	while ( !Drv_Max31865_Ready( port ) ) 
+	{ 
+		Hal_Delay_us(CLK_DELAY);
+		if( loop++ > 100 )
+			return -1; 
+	}
+#endif
 
 	rtd = Drv_Max31865_Reg_Read( port, 1 );
 
@@ -324,16 +385,29 @@ int Drv_Max31865_Temp_Read( int port, float *temp )
         if ( data != 0 )
         return -1;
     }
+
     
     #if 0
-    float adc;    
-    adc = (float)rtd/2.0;
-	*temp = adc/32.0 - 256.0;
+	    float adc;    
+	    adc = (float)rtd/2.0;
+		*temp = adc/32.0 - 256.0;
     #else
-    rtd >>= 1;
-    *temp = (rtd/32.0) - 256.0;
+
+		rtd >>= 1;
+		g_Data.iRTD[port] = rtd;
+		
+
+		#if 0
+	    *temp = (rtd/32.0) - 256.0;
+		#else
+	    *temp = __max31865_readCelsius(port);
+		#endif
 
     #endif
+
+	Print_Max31865(port, rtd, *temp);
+	PrintTCUSendData(0);
+	PrintTCUSendData(1);
 
 	//UARTprintf("RTD[%d]:0x%02x\n\r", port, rtd);
 

@@ -51,4 +51,79 @@ float MIN_V(float* num,uint32_t cnt)
     return min_v;
 }
 
+float AVERAGE_V_FILTER(float* num,uint32_t cnt, float fExpectionThreshold)
+{
+    float av;
+	float threshold_high, threshold_low;
+	float sum = 0;
+    uint32_t i;
+	uint8_t u8_count = 0;
 
+
+    for(i=0;i<cnt;i++)
+    {
+        sum += num[i];
+    }
+	
+	av = sum / cnt;
+
+	if( fExpectionThreshold == 0 )
+		return av;	
+
+	//Filter
+	sum = 0;
+	threshold_high = av + fExpectionThreshold;
+	threshold_low = av - fExpectionThreshold;
+	for(i=0;i<cnt;i++)
+    {
+    	if( num[i] >= threshold_high )
+			continue;
+
+		if( num[i] <= threshold_low )
+			continue;
+		
+        sum += num[i];
+		u8_count++;
+    }
+
+	av = sum / u8_count;
+
+	return av;
+
+
+	
+}
+
+
+// get a fraction part as an int
+int32_t get_fraction(float val)
+{
+#if 1
+	int32_t integer;
+
+	if(val >= 0)
+	{
+		integer = val * 100;
+		integer = integer%100;
+	}
+	else
+	{
+		integer = -val * 100;
+		integer = (integer%100);
+	}
+
+	return integer;
+
+#else
+    int32_t integer, fraction;
+
+    integer = (int32_t)val;
+    fraction = (int32_t)(val*100.0f);
+    fraction = fraction - (integer*100);
+    if ( fraction < 0 )
+        fraction *= -1;
+
+    return fraction;
+#endif
+
+}

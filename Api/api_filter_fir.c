@@ -31,7 +31,7 @@
 
 
 #define FIR_MAX_CHANNEL TEMP_CH_MAX
-#define SAMPLING_NUM  10 // FIR 필터 적용시 몇개의  sampling data로 평균 낼것인지 결정
+#define SAMPLING_NUM  			26//10 // FIR 필터 적용시 몇개의  sampling data로 평균 낼것인지 결정
 
 float _firCurrentSum[FIR_MAX_CHANNEL];//계산하기 위한 중간 값
 float _firPrevValue[FIR_MAX_CHANNEL][SAMPLING_NUM];
@@ -128,9 +128,32 @@ int GetFIR(float *value, int channel)
         
         if(_firIndex[channel] >= SAMPLING_NUM) _firIndex_set[channel] = 1;
     }
+
+	g_Data.fTempFirfilter[channel] = *value;
  
 
     return 0;
+}
+
+#define _RANGE_FILTER__VALUE_				1.8
+int GetFIR_New(float *value, int channel)
+{
+    float out;
+    float calc;
+    float *pFirPrevValue;
+    char i;
+
+	float fAverage;
+	
+    // error check
+    if(channel >= FIR_MAX_CHANNEL) return -1;
+      
+    pFirPrevValue = _firPrevValue[channel];
+
+	*value = AVERAGE_V_FILTER(pFirPrevValue, SAMPLING_NUM, _RANGE_FILTER__VALUE_);
+	g_Data.fTempFirfilter[channel] = *value;
+
+	return 0;
 }
 #endif
 

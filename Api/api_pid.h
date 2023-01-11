@@ -32,8 +32,8 @@ int PidCompute(float *input, float *setPoint, unsigned long now1ms, float *pOutp
 float PidGetKp(int channel);
 float PidGetKi(int channel);
 float PidGetKd(int channel);
-void IntCombine(float *value, int intPart, int fractionalPart, int fractionalDigits);
-
+void IntCombine(float *value, int intPartHigh, int intPartLow, int fractionalPart, int fractionalDigits);
+void IntCombineWgt(float *value, int intPart, int fractionalPart, int fractionalDigits);
 
 //*****************************************************************************
 //

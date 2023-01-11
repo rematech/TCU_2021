@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+
+#include "_include_header.h"
 #include "inc/hw_ints.h"
 #include "inc/hw_memmap.h"
 #include "driverlib/debug.h"
@@ -34,7 +36,7 @@
 #define OFF 0
 #define ON  1
 
-#define SP_CORRECTION   0.5
+#define SP_CORRECTION   0
 #define SP_BASE_VAL     55.0
 #define SP_INIT_VAL     (SP_BASE_VAL+SP_CORRECTION)
 
@@ -42,7 +44,7 @@ static volatile uint32_t SSROnCNT = 0;
 
 uint8_t curr_ssr_status[TEMP_CH_MAX] = { OFF, OFF, OFF };
 
-float _setPoint[TEMP_CH_MAX] = { SP_INIT_VAL, SP_INIT_VAL, SP_INIT_VAL};   // System(Heater) 嶺뚮ㅄ維싷쭗占� �뜝�럩沅붷뜝�럥利� �뤆�룊�삕
+float _setPoint[TEMP_CH_MAX] = { SP_INIT_VAL, SP_INIT_VAL, SP_INIT_VAL};   // System(Heater) �솾�꺂�뒧占쎈�덃납占쏙옙�뼠壤쏆�λ쐻�뜝占� �뜝�럥�맶�뜝�럥�쑋雅��굝�뼮占쎌맶�뜝�럥�쑅嶺뚯빢�삕 �뜝�럥夷у뜝�럥利멨뜝�럩援�
 uint8_t _ctrl_Mode[TEMP_CH_MAX] = { MODE_STOP, MODE_STOP, MODE_STOP };   // 0 : Stop PID,  1: Pid On,  2, 3: AutoTuning On  4: PC control
 uint8_t _ctrl_Mode_backup[TEMP_CH_MAX];
 int32_t SSROnPeriod[TEMP_CH_MAX] = { 0, 0, 0 };
@@ -50,6 +52,12 @@ int32_t SSROnPeriod[TEMP_CH_MAX] = { 0, 0, 0 };
 float _kp[TEMP_CH_MAX]={0,};
 float _ki[TEMP_CH_MAX]={0,};
 float _kd[TEMP_CH_MAX]={0,};
+int32_t _kp_integer[TEMP_CH_MAX];
+int32_t _ki_integer[TEMP_CH_MAX];
+int32_t _kd_integer[TEMP_CH_MAX];
+int32_t _kp_fraction[TEMP_CH_MAX];
+int32_t _ki_fraction[TEMP_CH_MAX];
+int32_t _kd_fraction[TEMP_CH_MAX];
 
 uint8_t temp_err_cnt = 0;
 
@@ -65,6 +73,10 @@ int _prevErrorCode[TEMP_CH_MAX]={0,};
 float _outputUpWeight[TEMP_CH_MAX]={0,};
 float _outputDownWeight[TEMP_CH_MAX]={0,};
 float _atuneOutputStep[TEMP_CH_MAX]={0,};
+int32_t _outputUpWeight_integer[TEMP_CH_MAX];
+int32_t _outputDownWeight_integer[TEMP_CH_MAX];
+int32_t _outputUpWeight_fraction[TEMP_CH_MAX];
+int32_t _outputDownWeight_fraction[TEMP_CH_MAX];
 
 float temp_Ambient[TEMP_CH_MAX];
 float curr_Ambient[TEMP_CH_MAX];
@@ -103,6 +115,7 @@ const char* str_ctrl_mode[]=
     "MAN",
     "Unknown",
 };
+
 
 void App_Set_Ctrl_Mode(uint8_t ch, uint8_t val)
 {
@@ -314,6 +327,7 @@ void App_Set_SP(uint8_t ch, uint8_t mode, uint8_t val)
     }
 }
 
+
 void App_Run_Heater(uint8_t ch, float *temperature, float *setPoint, unsigned long Now_ms)
 {
 	int i;//, index;
@@ -414,13 +428,25 @@ void App_Run_Heater(uint8_t ch, float *temperature, float *setPoint, unsigned lo
             	dmsg(DL_INF,"%s : [%s] AutoTuning finished.\r\n",__func__, str_temp_ch[ch]);
 
                 _ctrl_Mode[ch] = MODE_PID; // PID on
-                _ctrlOutput[ch] = 0; // 출력을 일단 0으로 
+                _ctrlOutput[ch] = 0; // �빊�뮆�젾占쎌뱽 占쎌뵬占쎈뼊 0占쎌몵嚥∽옙
                 App_SSR_Ctrl(ch,OFF); // 20191121
 
                 ATuneGetKp(ch, &_kp[ch]);
                 ATuneGetKi(ch, &_ki[ch]);
                 ATuneGetKd(ch, &_kd[ch]);
                 ATuneGetOutputWeight(&(_outputUpWeight[ch]), &(_outputDownWeight[ch]), ch);
+
+                // for sending protocols
+                _kp_integer[ch] = (int32_t)_kp[ch];
+                _kp_fraction[ch] = get_fraction(_kp[ch]);
+                _ki_integer[ch] = (int32_t)_ki[ch];
+                _ki_fraction[ch] = get_fraction(_ki[ch]);
+                _kd_integer[ch] = (int32_t)_kd[ch];
+                _kd_fraction[ch] = get_fraction(_kd[ch]);
+                _outputUpWeight_integer[ch] = (int32_t)_outputUpWeight[ch];
+                _outputUpWeight_fraction[ch] = get_fraction(_outputUpWeight[ch]);
+                _outputDownWeight_integer[ch] = (int32_t)_outputDownWeight[ch];
+                _outputDownWeight_fraction[ch] = get_fraction(_outputDownWeight[ch]);
 
                 // PID setting
                 PidSetTunings(&_kp[ch], &_ki[ch], &_kd[ch], &_outputUpWeight[ch], &_outputDownWeight[ch], ch);
@@ -446,7 +472,7 @@ void App_Run_Heater(uint8_t ch, float *temperature, float *setPoint, unsigned lo
     }
 
 
-    // Autotune Fail시 Stop Mode변경 및 Output = 0 [주기 길이가 500ms 이하일떄 Fail 발생]
+    // Autotune Fail占쎈뻻 Stop Mode癰귨옙野껓옙 獄쏉옙 Output = 0 [雅뚯눊由� 疫뀀챷�뵠揶쏉옙 500ms 占쎌뵠占쎈릭占쎌뵬占쎈뻘 Fail 獄쏆뮇源�]
     if(result == -2 )
     {
 
@@ -468,7 +494,7 @@ void App_Run_Heater(uint8_t ch, float *temperature, float *setPoint, unsigned lo
     // HeaterInput Setting
     if (result > -1 && !(_ctrl_Mode[ch] == MODE_STOP || _ctrl_Mode[ch] == MODE_MANUAL) )   
     //if (result > -1 )   
-    {  // result == -1인 경우는 interval이 sampling time보다 작아서 output 업데이트 안한 경우
+    {  // result == -1占쎌뵥 野껋럩�뒭占쎈뮉 interval占쎌뵠 sampling time癰귣��뼄 占쎌삂占쎈툡占쎄퐣 output 占쎈씜占쎈쑓占쎌뵠占쎈뱜 占쎈툧占쎈립 野껋럩�뒭
         ////////////////////////////
         // PWM Output Set
     	//if ( _ctrlOutput[ch] == 0. )
@@ -693,27 +719,27 @@ void App_Temp_Read(uint8_t ch)
                 // TEMP FILTER 
                 pv_offset = temp_Ambient[ch] - _setPoint[ch];
 
-                if( (pv_offset > -(TEMPERATURE_STEP1)) && (pv_offset < (TEMPERATURE_STEP1)) )
-                {
-                    pv_integer[ch] = (int32_t)_setPoint[ch];
-                }
-                else if( (pv_offset > -(TEMPERATURE_STEP2)) && (pv_offset < (TEMPERATURE_STEP2)) )
-                {
-                    if(pv_offset < 0)   pv_integer[ch] = ((int32_t)_setPoint[ch]) - 1;                   
-                    else                pv_integer[ch] = ((int32_t)_setPoint[ch]) + 1;                    
-                }
-                else if( (pv_offset > -(TEMPERATURE_STEP3)) && (pv_offset < (TEMPERATURE_STEP3)) )
-                {
-                    if(pv_offset < 0)   pv_integer[ch] = ((int32_t)_setPoint[ch]) - 2;                   
-                    else                pv_integer[ch] = ((int32_t)_setPoint[ch]) + 2;  
+                // if( (pv_offset > -(TEMPERATURE_STEP1)) && (pv_offset < (TEMPERATURE_STEP1)) )
+                // {
+                //     pv_integer[ch] = (int32_t)_setPoint[ch];
+                // }
+                // else if( (pv_offset > -(TEMPERATURE_STEP2)) && (pv_offset < (TEMPERATURE_STEP2)) )
+                // {
+                //     if(pv_offset < 0)   pv_integer[ch] = ((int32_t)_setPoint[ch]) - 1;                   
+                //     else                pv_integer[ch] = ((int32_t)_setPoint[ch]) + 1;                    
+                // }
+                // else if( (pv_offset > -(TEMPERATURE_STEP3)) && (pv_offset < (TEMPERATURE_STEP3)) )
+                // {
+                //     if(pv_offset < 0)   pv_integer[ch] = ((int32_t)_setPoint[ch]) - 2;                   
+                //     else                pv_integer[ch] = ((int32_t)_setPoint[ch]) + 2;  
 
-                }
-                else
+                // }
+                // else
                 {
                     pv_integer[ch] = (int32_t)temp_Ambient[ch];
-                    #if 0
-                    pv_fraction[ch] = (int32_t)(temp_Ambient[ch]*1000.0f);
-                    pv_fraction[ch] = pv_fraction[ch] - (pv_integer[ch]*1000);
+                    #if 1
+                    pv_fraction[ch] = (int32_t)(temp_Ambient[ch]*100.0f);
+                    pv_fraction[ch] = pv_fraction[ch] - (pv_integer[ch]*100);
                     if ( pv_fraction[ch] < 0 )
                     {
                         pv_fraction[ch] *= -1;

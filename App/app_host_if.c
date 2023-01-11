@@ -98,30 +98,55 @@ void App_Host_IF_Send_Msg(uint8_t opcode, uint8_t *data, uint32_t len)
             
             send_flag = true;
 
+            p->payload.data[cnt++] = _ctrl_Mode[TEMP_CH_1];
         break;
 
-        case HIOP_TCU_RES_DATA :
-            p->payload.opcode = opcode;
+        case HIOP_TCU_RES_DATA :        //3
+            p->payload.opcode = opcode;//6
             p->payload.data[cnt++] = max31865_fault[TEMP_CH_1];
             p->payload.data[cnt++] = _ctrl_Mode[TEMP_CH_1];
-            p->payload.data[cnt++] = pv_integer[TEMP_CH_1];
+//            p->payload.data[cnt++] = (pv_integer[TEMP_CH_1]>>8)&0x00FF;
+            p->payload.data[cnt++] = pv_integer[TEMP_CH_1]&0x00FF;
+            p->payload.data[cnt++] = pv_fraction[TEMP_CH_1];
             p->payload.data[cnt++] = curr_ssr_status[TEMP_CH_1];
             p->payload.data[cnt++] = pwm_percent_Integer[TEMP_CH_1];
             p->payload.data[cnt++] = alarm_status[TEMP_CH_1];
 
-            p->payload.data[cnt++] = max31865_fault[TEMP_CH_2];
+            p->payload.data[cnt++] = (_kp_integer[TEMP_CH_1]>>8)&0x00FF;//14
+            p->payload.data[cnt++] = _kp_integer[TEMP_CH_1];
+            p->payload.data[cnt++] = _kp_fraction[TEMP_CH_1];
+            p->payload.data[cnt++] = (_ki_integer[TEMP_CH_1]>>8)&0x00FF;
+            p->payload.data[cnt++] = _ki_integer[TEMP_CH_1];
+            p->payload.data[cnt++] = _ki_fraction[TEMP_CH_1];
+            p->payload.data[cnt++] = (_kd_integer[TEMP_CH_1]>>8)&0x00FF;
+            p->payload.data[cnt++] = _kd_integer[TEMP_CH_1];
+            p->payload.data[cnt++] = _kd_fraction[TEMP_CH_1];
+            p->payload.data[cnt++] = _outputUpWeight_integer[TEMP_CH_1];
+            p->payload.data[cnt++] = _outputUpWeight_fraction[TEMP_CH_1];
+            p->payload.data[cnt++] = _outputDownWeight_integer[TEMP_CH_1];
+            p->payload.data[cnt++] = _outputDownWeight_fraction[TEMP_CH_1];
+
+            p->payload.data[cnt++] = max31865_fault[TEMP_CH_2];//27
             p->payload.data[cnt++] = _ctrl_Mode[TEMP_CH_2];
-            p->payload.data[cnt++] = pv_integer[TEMP_CH_2];
+//            p->payload.data[cnt++] = (pv_integer[TEMP_CH_2]>>8)&0x00FF;
+            p->payload.data[cnt++] = pv_integer[TEMP_CH_2]&0x00FF;
+            p->payload.data[cnt++] = pv_fraction[TEMP_CH_2];
             p->payload.data[cnt++] = curr_ssr_status[TEMP_CH_2];
             p->payload.data[cnt++] = pwm_percent_Integer[TEMP_CH_2];
             p->payload.data[cnt++] = alarm_status[TEMP_CH_2];
-
-            p->payload.data[cnt++] = max31865_fault[TEMP_CH_3];
-            p->payload.data[cnt++] = _ctrl_Mode[TEMP_CH_3];
-            p->payload.data[cnt++] = pv_integer[TEMP_CH_3];
-            p->payload.data[cnt++] = curr_ssr_status[TEMP_CH_3];
-            p->payload.data[cnt++] = pwm_percent_Integer[TEMP_CH_3];
-            p->payload.data[cnt++] = alarm_status[TEMP_CH_3];
+            p->payload.data[cnt++] = (_kp_integer[TEMP_CH_2]>>8)&0x00FF;
+            p->payload.data[cnt++] = _kp_integer[TEMP_CH_2];
+            p->payload.data[cnt++] = _kp_fraction[TEMP_CH_2];
+            p->payload.data[cnt++] = (_ki_integer[TEMP_CH_2]>>8)&0x00FF;
+            p->payload.data[cnt++] = _ki_integer[TEMP_CH_2];
+            p->payload.data[cnt++] = _ki_fraction[TEMP_CH_2];
+            p->payload.data[cnt++] = (_kd_integer[TEMP_CH_2]>>8)&0x00FF;
+            p->payload.data[cnt++] = _kd_integer[TEMP_CH_2];
+            p->payload.data[cnt++] = _kd_fraction[TEMP_CH_2];
+            p->payload.data[cnt++] = _outputUpWeight_integer[TEMP_CH_2];
+            p->payload.data[cnt++] = _outputUpWeight_fraction[TEMP_CH_2];
+            p->payload.data[cnt++] = _outputDownWeight_integer[TEMP_CH_2];
+            p->payload.data[cnt++] = _outputDownWeight_fraction[TEMP_CH_2];
 
             cnt += PACKET_OPCODE_LEN;
             msg_size = App_Host_IF_build_Packet(buf,cnt);
@@ -160,6 +185,16 @@ void App_Host_IF_Send_Msg(uint8_t opcode, uint8_t *data, uint32_t len)
 
         break;
 
+        case HIOP_TCU_RES_SET_PID :
+            p->payload.opcode = opcode;
+            p->payload.data[cnt++] = RET_CODE_SUC;
+        
+            cnt += PACKET_OPCODE_LEN;
+            msg_size = App_Host_IF_build_Packet(buf,cnt);
+            
+            send_flag = true;
+        break;
+
     }
 
     if(send_flag == true)
@@ -177,24 +212,26 @@ void App_Host_IF_Send_Boot_Msg(void)
 
 void App_Host_IF_Msg_Parser(uint8_t *data)
 {
+    float kp, ki, kd, up_wgt, down_wgt;
+
     PACKET_PAYLOAD *p = (PACKET_PAYLOAD*)data;
     
     dmsg(DL_DBG,"%s : %d\r\n",__func__,p->opcode);
     
     switch(p->opcode) 
     {
-        case HIOP_TCU_RES_BOOT:
+        case HIOP_TCU_RES_BOOT:     //01
             App_Host_Comm_Seq_Set(HCS_NORMAL);
             
             break;
             
-        case HIOP_TCU_REQ_DATA:
+        case HIOP_TCU_REQ_DATA:     //02
             App_Set_SSR_En(p->data[0]);
             
             App_Host_IF_Send_Msg(HIOP_TCU_RES_DATA,p->data,0);
             break;
         
-        case HIOP_TCU_REQ_SET_SP:
+        case HIOP_TCU_REQ_SET_SP:   //04
             App_Set_SP(TEMP_CH_1,p->data[0],p->data[1]);
             App_Set_SP(TEMP_CH_2,p->data[2],p->data[3]);
             App_Set_SP(TEMP_CH_3,p->data[4],p->data[5]);
@@ -202,7 +239,7 @@ void App_Host_IF_Msg_Parser(uint8_t *data)
             App_Host_IF_Send_Msg(HIOP_TCU_RES_SET_SP,p->data,0);
             break;
 
-        case HIOP_TCU_REQ_SET_ALARM:
+        case HIOP_TCU_REQ_SET_ALARM:    //06
             dev.alarm.lo_en = p->data[0];
             dev.alarm.lo_val = p->data[1];
             dev.alarm.hi_en = p->data[2];
@@ -213,6 +250,28 @@ void App_Host_IF_Msg_Parser(uint8_t *data)
             break;
         
         case HIOP_TCU_RES_EVENT:
+
+            break;
+
+        case HIOP_TCU_REQ_SET_PID:
+            // protocol : ch1, kpInt, kpFrac, kiInt, kdFrac, kdInt, kdFrac, up_wgtInt, up_wgtFrac, down_wgtInt, down_wgtFrac, ch2, ...
+            // TEMP_CH_1
+            IntCombine(&kp, p->data[0], p->data[1], p->data[2],2);
+            IntCombine(&ki, p->data[3], p->data[4], p->data[5],2);
+            IntCombine(&kd, p->data[6], p->data[7], p->data[8],2);
+            IntCombineWgt(&up_wgt, p->data[9], p->data[10], 2);
+            IntCombineWgt(&down_wgt, p->data[11], p->data[12], 2);
+            PidSetTunings(&kp, &ki, &kd, &up_wgt, &up_wgt, TEMP_CH_1);
+
+            // TEMP_CH_2
+            IntCombine(&kp, p->data[13], p->data[14], p->data[15],2);
+            IntCombine(&ki, p->data[16], p->data[17], p->data[18],2);
+            IntCombine(&kd, p->data[19], p->data[20], p->data[21],2);
+            IntCombineWgt(&up_wgt, p->data[22], p->data[23], 2);
+            IntCombineWgt(&down_wgt, p->data[24], p->data[25], 2);
+            PidSetTunings(&kp, &ki, &kd, &up_wgt, &up_wgt, TEMP_CH_2);
+
+            App_Host_IF_Send_Msg(HIOP_TCU_RES_SET_PID, p->data, 0);
 
             break;
 

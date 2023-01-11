@@ -50,6 +50,7 @@ unsigned char Drv_Max31865_Ready( int port );
 void Drv_Max31865_Chips_Init(uint8_t ch);
 int Drv_Max31865_Temp_Read( int port, float *temp );
 
+float __max31865_readCelsius(int port);
 
 //*****************************************************************************
 //

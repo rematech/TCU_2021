@@ -3,6 +3,7 @@
 #include "_include_header.h"
 
 DEV_T dev;
+GLOBAL_DATA g_Data;
 
 
 void App_Sys_Logo(void)
@@ -165,6 +166,12 @@ void App_Init_Temp_Ctrl(void)
     #endif
 }
 
+void App_Init_GData()
+{
+	g_Data.iReadCount = 0;
+	g_Data.iExcuteCount = 0;
+}
+
 
 void App_Init(void)
 {
@@ -182,6 +189,8 @@ void App_Init(void)
     App_SWTimer_Proc_init();
 
     App_Init_Temp_Ctrl();
+
+	App_Init_GData();
 
 }
 

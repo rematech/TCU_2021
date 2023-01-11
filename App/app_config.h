@@ -20,11 +20,11 @@ extern "C"
 #define COP_NAME   "PICOANDTERA"
 #define DEV_NAME   "FFS2000-TCU"
 
-#define SW_DATE    "210430" 
+#define SW_DATE    "221220" 
 
 #define SW_VER_MAJOR    1
 #define SW_VER_MINOR    0
-#define SW_VER_BUILD    2
+#define SW_VER_BUILD    3
 
 
 
