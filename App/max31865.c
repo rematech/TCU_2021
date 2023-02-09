@@ -344,7 +344,7 @@ int Drv_Max31865_Temp_Read( int port, float *temp )
 	uint32_t loop = 0;
 
 #if 1
-	#define __DRDY_PASS_COUNT_			10
+	#define __DRDY_PASS_COUNT_			1
 	while(1)
 	{
 		while ( !Drv_Max31865_Ready( port ) ) 
