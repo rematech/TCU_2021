@@ -103,6 +103,7 @@ int GetFIR(float *value, int channel)
     float calc;
     float *pFirPrevValue;
     char i;
+	int iFilterExceptionCount = 3;
     // error check
     if(channel >= FIR_MAX_CHANNEL) return -1;
       
@@ -113,12 +114,13 @@ int GetFIR(float *value, int channel)
     _firCurrentSum[channel] += (*value - out);
 
     _firIndex[channel]++;
-    
+
+	
     if(_firIndex_set[channel])
     {
 
-        calc =_firCurrentSum[channel] - MAX_V_COUNT(3, _firPrevValue[channel], SAMPLING_NUM);
-        *value = (calc - MIN_V_COUNT(3, _firPrevValue[channel], SAMPLING_NUM)) / (SAMPLING_NUM-2);
+        calc =_firCurrentSum[channel] - MAX_V_COUNT(iFilterExceptionCount, _firPrevValue[channel], SAMPLING_NUM);
+        *value = (calc - MIN_V_COUNT(iFilterExceptionCount, _firPrevValue[channel], SAMPLING_NUM)) / (SAMPLING_NUM-2*iFilterExceptionCount);
         
         if(_firIndex[channel] >= SAMPLING_NUM ) _firIndex[channel] = 0;
     }
