@@ -26,6 +26,8 @@ extern "C"
 #define FLASH_PB_START          0x3F800
 #define FLASH_PB_END            FLASH_PB_START + 0x400
 
+#define SAMPLING_NUM  			26// // FIR 필터 적용시 몇개의  sampling data로 평균 낼것인지 결정
+#define FIR_MAX_CHANNEL 		TEMP_CH_MAX
 
 
 typedef enum

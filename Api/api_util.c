@@ -1,5 +1,6 @@
+#include "_header_core.h"
 
-
+#include "app.h"
 #include "api_util.h"
 
 uint8_t Api_CheckSum_Encoding(uint8_t *check_data,uint32_t data_len)
@@ -51,14 +52,15 @@ float MIN_V(float* num,uint32_t cnt)
     return min_v;
 }
 
-
 float MAX_V_COUNT(uint8_t getcount, float* num,uint32_t cnt)
 {
-    float max_v[getcount], fTotal = 0;
+    float max_v[3], fTotal = 0;
     uint32_t i, j, tempIndex;
-	float fTemp[cnt];
+	float fTemp[SAMPLING_NUM];
 
-	memcpy( fTemp, num, cnt);
+	//memcpy( fTemp, num, SAMPLING_NUM);
+	for(i=0; i<SAMPLING_NUM; i++)
+		fTemp[i] = num[i];
 
 	for( j=0; j<getcount; j++)
 	{
@@ -83,11 +85,13 @@ float MAX_V_COUNT(uint8_t getcount, float* num,uint32_t cnt)
 
 float MIN_V_COUNT(uint8_t getcount, float* num,uint32_t cnt)
 {
-    float min_v[getcount], fTotal = 0;
+    float min_v[3], fTotal = 0;
     uint32_t i, j, tempIndex;
-	float fTemp[cnt];
+	float fTemp[SAMPLING_NUM];
 
-	memcpy( fTemp, num, cnt);
+	//memcpy( fTemp, num, SAMPLING_NUM);
+	for(i=0; i<SAMPLING_NUM; i++)
+		fTemp[i] = num[i];
 
 	for( j=0; j<getcount; j++)
 	{
