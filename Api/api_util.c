@@ -54,7 +54,7 @@ float MIN_V(float* num,uint32_t cnt)
 
 float MAX_V_COUNT(uint8_t getcount, float* num,uint32_t cnt)
 {
-    float max_v[getcount], fTotal;
+    float max_v[getcount], fTotal = 0;
     uint32_t i, j, tempIndex;
 	float fTemp[cnt];
 
@@ -83,7 +83,7 @@ float MAX_V_COUNT(uint8_t getcount, float* num,uint32_t cnt)
 
 float MIN_V_COUNT(uint8_t getcount, float* num,uint32_t cnt)
 {
-    float min_v[getcount], fTotal;
+    float min_v[getcount], fTotal = 0;
     uint32_t i, j, tempIndex;
 	float fTemp[cnt];
 
