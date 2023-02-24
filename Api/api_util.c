@@ -52,9 +52,9 @@ float MIN_V(float* num,uint32_t cnt)
 }
 
 
-float* MAX_V_COUNT(uint8_t getcount, float* num,uint32_t cnt)
+float MAX_V_COUNT(uint8_t getcount, float* num,uint32_t cnt)
 {
-    float max_v[getcount];
+    float max_v[getcount], fTotal;
     uint32_t i, j, tempIndex;
 	float fTemp[cnt];
 
@@ -74,13 +74,16 @@ float* MAX_V_COUNT(uint8_t getcount, float* num,uint32_t cnt)
 
 		fTemp[tempIndex] = 0;
 	}
+
+	for(i=0; i<getcount; i++)
+		fTotal += max_v[i];
 	
-    return max_v;
+    return fTotal;
 }
 
-float* MIN_V_COUNT(uint8_t getcount, float* num,uint32_t cnt)
+float MIN_V_COUNT(uint8_t getcount, float* num,uint32_t cnt)
 {
-    float min_v[getcount];
+    float min_v[getcount], fTotal;
     uint32_t i, j, tempIndex;
 	float fTemp[cnt];
 
@@ -100,8 +103,11 @@ float* MIN_V_COUNT(uint8_t getcount, float* num,uint32_t cnt)
 
 		fTemp[tempIndex] = 0;
 	}
+
+	for(i=0; i<getcount; i++)
+		fTotal += min_v[i];
 	
-    return min_v;
+    return fTotal;
 }
 
 float AVERAGE_V_FILTER(float* num,uint32_t cnt, float fExpectionThreshold)
