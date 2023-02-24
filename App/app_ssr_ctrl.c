@@ -80,6 +80,7 @@ int32_t _outputDownWeight_fraction[TEMP_CH_MAX];
 
 float temp_Ambient[TEMP_CH_MAX];
 float curr_Ambient[TEMP_CH_MAX];
+uint16_t temp_raw_rtd[TEMP_CH_MAX];
 
 int32_t pv_integer[TEMP_CH_MAX];
 int32_t pv_fraction[TEMP_CH_MAX];
@@ -324,6 +325,8 @@ void App_Set_SP(uint8_t ch, uint8_t mode, uint8_t val)
         _setPoint[ch] = val;
         _setPoint[ch] += SP_CORRECTION;
         App_Ctrl_Param_Init(ch,mode);
+        dmsg(DL_INF," ctrl_mode : Ch [%d] = [%d] .\r\n",ch, mode);
+
     }
 }
 
@@ -689,11 +692,12 @@ void App_Temp_Read(uint8_t ch)
     int ret = 0;
     float pv_offset = 0;
     float pv = 0;
+    uint16_t raw_rtd;
     
     if ( max31865_fault[ch] == 0 )
     {
         // ret = Drv_Max31865_Temp_Read( ch, &temp_Ambient[ch] );
-        ret = Drv_Max31865_Temp_Read( ch, &pv );
+        ret = Drv_Max31865_Temp_Read( ch, &pv, &raw_rtd );
         
         if ( ret > 0 )
         {
@@ -713,6 +717,7 @@ void App_Temp_Read(uint8_t ch)
                 {
                     temp_Ambient[ch] = pv;
                     curr_Ambient[ch] = pv;
+                    temp_raw_rtd[ch] = raw_rtd;
                 }
                 // FIR Filter
                 ret = GetFIR(&temp_Ambient[ch], ch);

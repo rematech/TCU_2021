@@ -33,6 +33,10 @@ uint8_t Api_CheckSum_Encoding(uint8_t *check_data,uint32_t data_len);
 uint8_t Api_CheckSum_Decoding(uint8_t *check_data,uint32_t data_len,uint8_t check_sum);
 float MAX_V(float* num,uint32_t cnt);
 float MIN_V(float* num,uint32_t cnt);
+float* MAX_V_COUNT(uint8_t getcount, float* num,uint32_t cnt);
+float* MIN_V_COUNT(uint8_t getcount, float* num,uint32_t cnt);
+
+
 float AVERAGE_V_FILTER(float* num,uint32_t cnt, float fExpectionThreshold);
 
 // get a fraction part as an int

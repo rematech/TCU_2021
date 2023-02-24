@@ -261,7 +261,7 @@ void App_Host_IF_Msg_Parser(uint8_t *data)
             IntCombine(&kd, p->data[6], p->data[7], p->data[8],2);
             IntCombineWgt(&up_wgt, p->data[9], p->data[10], 2);
             IntCombineWgt(&down_wgt, p->data[11], p->data[12], 2);
-            PidSetTunings(&kp, &ki, &kd, &up_wgt, &up_wgt, TEMP_CH_1);
+            PidSetTunings(&kp, &ki, &kd, &up_wgt, &down_wgt, TEMP_CH_1);
 
             // TEMP_CH_2
             IntCombine(&kp, p->data[13], p->data[14], p->data[15],2);
@@ -269,7 +269,7 @@ void App_Host_IF_Msg_Parser(uint8_t *data)
             IntCombine(&kd, p->data[19], p->data[20], p->data[21],2);
             IntCombineWgt(&up_wgt, p->data[22], p->data[23], 2);
             IntCombineWgt(&down_wgt, p->data[24], p->data[25], 2);
-            PidSetTunings(&kp, &ki, &kd, &up_wgt, &up_wgt, TEMP_CH_2);
+            PidSetTunings(&kp, &ki, &kd, &up_wgt, &down_wgt, TEMP_CH_2);
 
             App_Host_IF_Send_Msg(HIOP_TCU_RES_SET_PID, p->data, 0);
 

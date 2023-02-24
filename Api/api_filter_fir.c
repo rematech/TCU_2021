@@ -30,8 +30,8 @@
 #include "max31865.h"
 
 
-#define FIR_MAX_CHANNEL TEMP_CH_MAX
-#define SAMPLING_NUM  			26//10 // FIR 필터 적용시 몇개의  sampling data로 평균 낼것인지 결정
+#define FIR_MAX_CHANNEL 		TEMP_CH_MAX
+#define SAMPLING_NUM  			26// // FIR 필터 적용시 몇개의  sampling data로 평균 낼것인지 결정
 
 float _firCurrentSum[FIR_MAX_CHANNEL];//계산하기 위한 중간 값
 float _firPrevValue[FIR_MAX_CHANNEL][SAMPLING_NUM];

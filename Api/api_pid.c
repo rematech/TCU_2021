@@ -21,7 +21,7 @@
 #include "app_ssr_ctrl.h"
 #include "api_pid.h"
 #include "max31865.h"
-
+#include "api_util.h"
 
 #define PID_MAX_CHANNEL TEMP_CH_MAX
 
@@ -157,7 +157,7 @@ int PidCompute(float *input, float *setPoint, unsigned long now1ms, float *pOutp
 void PidSetTunings(float *Kp, float *Ki, float *Kd, float *upWeight, float *downWeight, int channel)
 {
    float sampleTimeInSec;
-   if (*Kp<0 || *Ki<0 || Kd<0) return;
+   if (*Kp<0 || *Ki<0 || *Kd<0) return;
  
    sampleTimeInSec = (float)_pidSampleTime[channel] / 1000.0;  
    _pidKp[channel] = *Kp;

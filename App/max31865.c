@@ -336,7 +336,7 @@ int Drv_Max31865_Temp_Read( int port, float *temp )
 #else
 
 static uint8_t iDelayCount_forDRDY = 0;
-int Drv_Max31865_Temp_Read( int port, float *temp )
+int Drv_Max31865_Temp_Read( int port, float *temp, uint16_t *raw_rtd )
 {
 	uint8_t data;
 	uint16_t rtd;
@@ -385,7 +385,6 @@ int Drv_Max31865_Temp_Read( int port, float *temp )
         if ( data != 0 )
         return -1;
     }
-
     
     #if 0
 	    float adc;    
@@ -396,7 +395,7 @@ int Drv_Max31865_Temp_Read( int port, float *temp )
 		rtd >>= 1;
 		g_Data.iRTD[port] = rtd;
 		
-#define __MAX31865_TEMP_CAL__MOTHOD_			0
+#define __MAX31865_TEMP_CAL__MOTHOD_			1
 
 		#if __MAX31865_TEMP_CAL__MOTHOD_
 	    	*temp = (rtd/32.0) - 256.0;
@@ -404,7 +403,8 @@ int Drv_Max31865_Temp_Read( int port, float *temp )
 	    	*temp = __max31865_readCelsius(port);
 		#endif
 
-    #endif
+     *raw_rtd = *temp;
+   #endif
 
 	Print_Max31865(port, rtd, *temp);
 	PrintTCUSendData(0);

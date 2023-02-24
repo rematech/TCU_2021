@@ -74,6 +74,7 @@ extern int32_t _kd_fraction[];
 extern int32_t _outputUpWeight_fraction[];
 extern int32_t _outputDownWeight_fraction[];
 
+extern uint16_t temp_raw_rtd[TEMP_CH_MAX];
 
 /******************************************************************************/
 /* functions                                                                 */

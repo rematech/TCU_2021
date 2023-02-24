@@ -48,7 +48,7 @@ unsigned char Drv_Max31865_Reg_Write( int port, unsigned char addr, unsigned cha
 void Drv_Max31865_Init_Config( int port );
 unsigned char Drv_Max31865_Ready( int port );
 void Drv_Max31865_Chips_Init(uint8_t ch);
-int Drv_Max31865_Temp_Read( int port, float *temp );
+int Drv_Max31865_Temp_Read( int port, float *temp, uint16_t *raw_rtd );
 
 float __max31865_readCelsius(int port);
 
