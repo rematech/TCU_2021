@@ -117,8 +117,8 @@ int GetFIR(float *value, int channel)
     if(_firIndex_set[channel])
     {
 
-        calc =_firCurrentSum[channel] - MAX_V(_firPrevValue[channel], SAMPLING_NUM);
-        *value = (calc - MIN_V(_firPrevValue[channel], SAMPLING_NUM)) / (SAMPLING_NUM-2);
+        calc =_firCurrentSum[channel] - MAX_V_COUNT(3, _firPrevValue[channel], SAMPLING_NUM);
+        *value = (calc - MIN_V_COUNT(3, _firPrevValue[channel], SAMPLING_NUM)) / (SAMPLING_NUM-2);
         
         if(_firIndex[channel] >= SAMPLING_NUM ) _firIndex[channel] = 0;
     }
